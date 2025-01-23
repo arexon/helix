@@ -17,9 +17,10 @@ pub fn set(
         .parse::<usize>()
         .map_err(|_| anyhow!("index must be an integer"))?;
     let (view, doc) = current!(cx.editor);
-    let path = doc
-        .path()
-        .ok_or_else(|| anyhow!("current document has no path"))?;
+    let path = path::get_relative_path(
+        doc.path()
+            .ok_or_else(|| anyhow!("current document has no path"))?,
+    );
     let selection = doc.selection(view.id);
 
     let mut store = Store::open()?;
@@ -122,11 +123,11 @@ pub fn list(
 }
 
 #[derive(Default, Serialize, Deserialize)]
-struct Store {
-    projects: HashMap<PathBuf, Project>,
+struct Store<'a> {
+    projects: HashMap<PathBuf, Project<'a>>,
 }
 
-impl Store {
+impl<'a> Store<'a> {
     fn open() -> anyhow::Result<Self> {
         match std::fs::read_to_string(helix_loader::harpoon_store_file()) {
             Ok(v) => Ok(serde_json::from_str(&v)?),
@@ -141,7 +142,7 @@ impl Store {
         Ok(())
     }
 
-    fn set_file(&mut self, index: usize, file: File) {
+    fn set_file(&mut self, index: usize, file: File<'a>) {
         let project = self.project();
         project.files.insert(index, file);
     }
@@ -151,25 +152,25 @@ impl Store {
         project.files.get(&index)
     }
 
-    fn project(&mut self) -> &mut Project {
+    fn project(&mut self) -> &mut Project<'a> {
         let cwd = helix_stdx::env::current_working_dir();
         self.projects.entry(cwd.clone()).or_default()
     }
 }
 
 #[derive(Default, Serialize, Deserialize)]
-struct Project {
-    files: HashMap<usize, File>,
+struct Project<'a> {
+    files: HashMap<usize, File<'a>>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct File {
-    path: PathBuf,
+struct File<'a> {
+    path: Cow<'a, Path>,
     spans: SmallVec<[Span; 1]>,
 }
 
-impl File {
-    fn new(path: PathBuf, selection: &Selection) -> Self {
+impl<'a> File<'a> {
+    fn new(path: Cow<'a, Path>, selection: &Selection) -> Self {
         Self {
             path: path.clone(),
             spans: selection
