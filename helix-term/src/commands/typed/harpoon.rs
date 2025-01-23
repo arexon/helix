@@ -97,18 +97,14 @@ pub fn list(
 
     let mut store = Store::open()?;
     let project = store.project();
-    let contents =
-        project
-            .files
-            .iter()
-            .fold("# Harpoon List\n".to_string(), |mut md, (index, file)| {
-                md.push_str("- [");
-                md.push_str(&index.to_string());
-                md.push_str("] ");
-                md.push_str(file.path.to_str().unwrap());
-                md.push('\n');
-                md
-            });
+    let mut files = project.files.iter().collect::<Vec<_>>();
+    files.sort_by(|(a_index, _), (b_index, _)| a_index.cmp(b_index));
+    let contents = files
+        .iter()
+        .fold(String::new(), |mut output, (index, file)| {
+            let _ = writeln!(output, "{}. {}", index, file.path.to_string_lossy());
+            output
+        });
 
     let callback = async move {
         let call: job::Callback = Callback::EditorCompositor(Box::new(
