@@ -75,13 +75,15 @@ pub fn update(
     let Some(path) = doc.path() else {
         return Ok(());
     };
+    let path = path::get_relative_path(path);
 
     let mut store = Store::open()?;
     let project = store.project();
-    if let Some(file) = project.files.values_mut().find(|file| &file.path == path) {
+    if let Some(file) = project.files.values_mut().find(|file| file.path == path) {
         let selection = doc.selection(view.id);
         file.update_selection(selection);
     }
+    store.save()?;
 
     Ok(())
 }
