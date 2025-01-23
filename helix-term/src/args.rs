@@ -16,6 +16,7 @@ pub struct Args {
     pub verbosity: u64,
     pub log_file: Option<PathBuf>,
     pub config_file: Option<PathBuf>,
+    pub harpoon_store_file: Option<PathBuf>,
     pub files: Vec<(PathBuf, Position)>,
     pub working_directory: Option<PathBuf>,
 }

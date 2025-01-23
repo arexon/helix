@@ -1,3 +1,5 @@
+mod harpoon;
+
 use std::fmt::Write;
 use std::io::BufReader;
 use std::ops::Deref;
@@ -3159,6 +3161,34 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
         doc: "Load a file into buffer",
         fun: read,
         signature: CommandSignature::positional(&[completers::filename]),
+    },
+    TypableCommand {
+        name: "harpoon_set",
+        aliases: &[],
+        doc: "Assign the current buffer to a Harpoon index",
+        fun: harpoon::set,
+        signature: CommandSignature::positional(&[completers::none]),
+    },
+    TypableCommand {
+        name: "harpoon_get",
+        aliases: &[],
+        doc: "Open a Harpoon file if it is stored",
+        fun: harpoon::get,
+        signature: CommandSignature::positional(&[completers::none]),
+    },
+    TypableCommand {
+        name: "harpoon_update",
+        aliases: &[],
+        doc: "Update an existing Harpoon file",
+        fun: harpoon::update,
+        signature: CommandSignature::positional(&[completers::none]),
+    },
+    TypableCommand {
+        name: "harpoon_list",
+        aliases: &[],
+        doc: "Show a list of Harpoon files for the current project",
+        fun: harpoon::list,
+        signature: CommandSignature::positional(&[completers::none]),
     },
 ];
 

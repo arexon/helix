@@ -15,6 +15,8 @@ static CONFIG_FILE: once_cell::sync::OnceCell<PathBuf> = once_cell::sync::OnceCe
 
 static LOG_FILE: once_cell::sync::OnceCell<PathBuf> = once_cell::sync::OnceCell::new();
 
+static HARPOON_STORE_FILE: once_cell::sync::OnceCell<PathBuf> = once_cell::sync::OnceCell::new();
+
 pub fn initialize_config_file(specified_file: Option<PathBuf>) {
     let config_file = specified_file.unwrap_or_else(default_config_file);
     ensure_parent_dir(&config_file);
@@ -25,6 +27,12 @@ pub fn initialize_log_file(specified_file: Option<PathBuf>) {
     let log_file = specified_file.unwrap_or_else(default_log_file);
     ensure_parent_dir(&log_file);
     LOG_FILE.set(log_file).ok();
+}
+
+pub fn initialize_harpoon_store_file(specified_file: Option<PathBuf>) {
+    let harpoon_store_file = specified_file.unwrap_or_else(default_harpoon_store_file);
+    ensure_parent_dir(&harpoon_store_file);
+    HARPOON_STORE_FILE.set(harpoon_store_file).ok();
 }
 
 /// A list of runtime directories from highest to lowest priority
@@ -140,6 +148,13 @@ pub fn log_file() -> PathBuf {
     LOG_FILE.get().map(|path| path.to_path_buf()).unwrap()
 }
 
+pub fn harpoon_store_file() -> PathBuf {
+    HARPOON_STORE_FILE
+        .get()
+        .map(|path| path.to_path_buf())
+        .unwrap()
+}
+
 pub fn workspace_config_file() -> PathBuf {
     find_workspace().0.join(".helix").join("config.toml")
 }
@@ -150,6 +165,10 @@ pub fn lang_config_file() -> PathBuf {
 
 pub fn default_log_file() -> PathBuf {
     cache_dir().join("helix.log")
+}
+
+pub fn default_harpoon_store_file() -> PathBuf {
+    cache_dir().join("harpoon_store.json")
 }
 
 /// Merge two TOML documents, merging values from `right` onto `left`
