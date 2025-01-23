@@ -27,6 +27,10 @@ pub fn set(
     store.set_file(index, File::new(path.clone(), selection));
     store.save()?;
 
+    let path_str = path.to_string_lossy().to_string();
+    cx.editor
+        .set_status(format!("'{}' harpooned #{}", path_str, index));
+
     Ok(())
 }
 
