@@ -67,9 +67,9 @@ pub fn update(
     }
 
     let (view, doc) = current!(cx.editor);
-    let path = doc
-        .path()
-        .ok_or_else(|| anyhow!("current document has no path"))?;
+    let Some(path) = doc.path() else {
+        return Ok(());
+    };
 
     let mut store = Store::open()?;
     let project = store.project();
