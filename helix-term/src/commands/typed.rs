@@ -3207,6 +3207,13 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
         signature: CommandSignature::positional(&[completers::none]),
     },
     TypableCommand {
+        name: "harpoon_remove",
+        aliases: &[],
+        doc: "Unassigns a file from an index",
+        fun: harpoon::remove,
+        signature: CommandSignature::positional(&[completers::none]),
+    },
+    TypableCommand {
         name: "harpoon_update",
         aliases: &[],
         doc: "Update an existing Harpoon file",

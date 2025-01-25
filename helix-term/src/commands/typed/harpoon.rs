@@ -11,11 +11,8 @@ pub fn set(
         return Ok(());
     }
 
-    let index = args
-        .first()
-        .ok_or_else(|| anyhow!("index not provided"))?
-        .parse::<usize>()
-        .map_err(|_| anyhow!("index must be an integer"))?;
+    let index = index(args.first())?;
+
     let (view, doc) = current!(cx.editor);
     let path = path::get_relative_path(
         doc.path()
@@ -29,7 +26,7 @@ pub fn set(
 
     let path_str = path.to_string_lossy().to_string();
     cx.editor
-        .set_status(format!("'{}' harpooned #{}", path_str, index));
+        .set_status(format!("'{}' added to #{}", path_str, index));
 
     Ok(())
 }
@@ -43,11 +40,7 @@ pub fn get(
         return Ok(());
     }
 
-    let index = args
-        .first()
-        .ok_or_else(|| anyhow!("index not provided"))?
-        .parse::<usize>()
-        .map_err(|_| anyhow!("index must be an integer"))?;
+    let index = index(args.first())?;
 
     let mut store = Store::open()?;
     let Some(file) = store.file(index) else {
@@ -58,6 +51,34 @@ pub fn get(
     let (view, doc) = current!(cx.editor);
     doc.set_selection(view.id, file.as_selection());
     align_view(doc, view, Align::Center);
+
+    Ok(())
+}
+
+pub fn remove(
+    cx: &mut compositor::Context,
+    args: &[Cow<str>],
+    event: PromptEvent,
+) -> anyhow::Result<()> {
+    if event != PromptEvent::Validate {
+        return Ok(());
+    }
+
+    let index = index(args.first())?;
+
+    let mut store = Store::open()?;
+    let file = store.remove_file(index);
+    if let Some(file) = file {
+        cx.editor.set_status(format!(
+            "'{}' removed from #{}",
+            file.path.to_string_lossy(),
+            index
+        ));
+        store.save()?;
+    } else {
+        cx.editor
+            .set_error(format!("No file assigned to #{}", index));
+    }
 
     Ok(())
 }
@@ -149,6 +170,11 @@ impl<'a> Store<'a> {
         project.files.insert(index, file);
     }
 
+    fn remove_file(&mut self, index: usize) -> Option<File> {
+        let project = self.project();
+        project.files.remove(&index)
+    }
+
     fn file(&mut self, index: usize) -> Option<&File> {
         let project = self.project();
         project.files.get(&index)
@@ -212,4 +238,10 @@ impl<'a> File<'a> {
 struct Span {
     start: usize,
     end: usize,
+}
+
+fn index(arg: Option<&Cow<str>>) -> anyhow::Result<usize> {
+    arg.ok_or_else(|| anyhow!("index not provided"))?
+        .parse::<usize>()
+        .map_err(|_| anyhow!("index must be an integer"))
 }
