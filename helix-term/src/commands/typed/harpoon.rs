@@ -177,7 +177,8 @@ impl<'a> Store<'a> {
 
     fn file(&mut self, index: usize) -> Option<&File> {
         let project = self.project();
-        project.files.get(&index)
+        let file = project.files.get(&index);
+        file.filter(|file| file.path.exists())
     }
 
     fn project(&mut self) -> &mut Project<'a> {
