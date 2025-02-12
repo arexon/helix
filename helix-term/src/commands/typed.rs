@@ -680,10 +680,16 @@ pub(super) fn buffers_remaining_impl(editor: &mut Editor) -> anyhow::Result<()> 
     Ok(())
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct WriteAllOptions {
+    pub force: bool,
+    pub write_scratch: bool,
+    pub auto_format: bool,
+}
+
 pub fn write_all_impl(
     cx: &mut compositor::Context,
-    force: bool,
-    write_scratch: bool,
+    options: WriteAllOptions,
 ) -> anyhow::Result<()> {
     let mut errors: Vec<&'static str> = Vec::new();
     let config = cx.editor.config();
@@ -701,7 +707,7 @@ pub fn write_all_impl(
                 return None;
             }
             if doc.path().is_none() {
-                if write_scratch {
+                if options.write_scratch {
                     errors.push("cannot write a buffer without a filename");
                 }
                 return None;
@@ -724,14 +730,14 @@ pub fn write_all_impl(
         // Save an undo checkpoint for any outstanding changes.
         doc.append_changes_to_history(view);
 
-        let fmt = if config.auto_format {
+        let fmt = if options.auto_format && config.auto_format {
             doc.auto_format().map(|fmt| {
                 let callback = make_format_callback(
                     doc_id,
                     doc.version(),
                     target_view,
                     fmt,
-                    Some((None, force)),
+                    Some((None, options.force)),
                 );
                 jobs.add(Job::with_callback(callback).wait_before_exiting());
             })
@@ -740,11 +746,11 @@ pub fn write_all_impl(
         };
 
         if fmt.is_none() {
-            cx.editor.save::<PathBuf>(doc_id, None, force)?;
+            cx.editor.save::<PathBuf>(doc_id, None, options.force)?;
         }
     }
 
-    if !errors.is_empty() && !force {
+    if !errors.is_empty() && !options.force {
         bail!("{:?}", errors);
     }
 
@@ -760,7 +766,14 @@ fn write_all(
         return Ok(());
     }
 
-    write_all_impl(cx, false, true)
+    write_all_impl(
+        cx,
+        WriteAllOptions {
+            force: false,
+            write_scratch: true,
+            auto_format: true,
+        },
+    )
 }
 
 fn force_write_all(
@@ -772,7 +785,14 @@ fn force_write_all(
         return Ok(());
     }
 
-    write_all_impl(cx, true, true)
+    write_all_impl(
+        cx,
+        WriteAllOptions {
+            force: true,
+            write_scratch: true,
+            auto_format: true,
+        },
+    )
 }
 
 fn write_all_quit(
@@ -783,7 +803,14 @@ fn write_all_quit(
     if event != PromptEvent::Validate {
         return Ok(());
     }
-    write_all_impl(cx, false, true)?;
+    write_all_impl(
+        cx,
+        WriteAllOptions {
+            force: false,
+            write_scratch: true,
+            auto_format: true,
+        },
+    )?;
     quit_all_impl(cx, false)
 }
 
@@ -795,7 +822,14 @@ fn force_write_all_quit(
     if event != PromptEvent::Validate {
         return Ok(());
     }
-    let _ = write_all_impl(cx, true, true);
+    let _ = write_all_impl(
+        cx,
+        WriteAllOptions {
+            force: true,
+            write_scratch: true,
+            auto_format: true,
+        },
+    );
     quit_all_impl(cx, true)
 }
 
