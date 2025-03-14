@@ -3370,7 +3370,7 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
         fun: reflow,
         completer: CommandCompleter::none(),
         signature: Signature {
-            positionals: (0, Some(0)),
+            positionals: (0, Some(1)),
             ..Signature::DEFAULT
         },
     },
