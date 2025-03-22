@@ -2615,7 +2615,7 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
         fun: buffer_close,
         completer: CommandCompleter::all(completers::buffer),
         signature: Signature {
-            positionals: (0, Some(0)),
+            positionals: (0, None),
             ..Signature::DEFAULT
         },
     },
@@ -2626,7 +2626,7 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
         fun: force_buffer_close,
         completer: CommandCompleter::all(completers::buffer),
         signature: Signature {
-            positionals: (0, Some(0)),
+            positionals: (0, None),
             ..Signature::DEFAULT
         },
     },
