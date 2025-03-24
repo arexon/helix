@@ -2,16 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use super::*;
 
-pub fn set(
-    cx: &mut compositor::Context,
-    args: &[Cow<str>],
-    event: PromptEvent,
-) -> anyhow::Result<()> {
+pub fn set(cx: &mut compositor::Context, args: Args, event: PromptEvent) -> anyhow::Result<()> {
     if event != PromptEvent::Validate {
         return Ok(());
     }
 
-    let index = index(args.first())?;
+    let index = index(args.get(0))?;
 
     let (view, doc) = current!(cx.editor);
     let path = path::get_relative_path(
@@ -31,16 +27,12 @@ pub fn set(
     Ok(())
 }
 
-pub fn get(
-    cx: &mut compositor::Context,
-    args: &[Cow<str>],
-    event: PromptEvent,
-) -> anyhow::Result<()> {
+pub fn get(cx: &mut compositor::Context, args: Args, event: PromptEvent) -> anyhow::Result<()> {
     if event != PromptEvent::Validate {
         return Ok(());
     }
 
-    let index = index(args.first())?;
+    let index = index(args.get(0))?;
 
     let mut store = Store::open()?;
     let Some(file) = store.file(index) else {
@@ -55,16 +47,12 @@ pub fn get(
     Ok(())
 }
 
-pub fn remove(
-    cx: &mut compositor::Context,
-    args: &[Cow<str>],
-    event: PromptEvent,
-) -> anyhow::Result<()> {
+pub fn remove(cx: &mut compositor::Context, args: Args, event: PromptEvent) -> anyhow::Result<()> {
     if event != PromptEvent::Validate {
         return Ok(());
     }
 
-    let index = index(args.first())?;
+    let index = index(args.get(0))?;
 
     let mut store = Store::open()?;
     let file = store.remove_file(index);
@@ -83,11 +71,7 @@ pub fn remove(
     Ok(())
 }
 
-pub fn update(
-    cx: &mut compositor::Context,
-    _: &[Cow<str>],
-    event: PromptEvent,
-) -> anyhow::Result<()> {
+pub fn update(cx: &mut compositor::Context, _: Args, event: PromptEvent) -> anyhow::Result<()> {
     if event != PromptEvent::Validate {
         return Ok(());
     }
@@ -109,11 +93,7 @@ pub fn update(
     Ok(())
 }
 
-pub fn list(
-    cx: &mut compositor::Context,
-    _: &[Cow<str>],
-    event: PromptEvent,
-) -> anyhow::Result<()> {
+pub fn list(cx: &mut compositor::Context, _: Args, event: PromptEvent) -> anyhow::Result<()> {
     if event != PromptEvent::Validate {
         return Ok(());
     }
@@ -241,7 +221,7 @@ struct Span {
     end: usize,
 }
 
-fn index(arg: Option<&Cow<str>>) -> anyhow::Result<usize> {
+fn index(arg: Option<&str>) -> anyhow::Result<usize> {
     arg.ok_or_else(|| anyhow!("index not provided"))?
         .parse::<usize>()
         .map_err(|_| anyhow!("index must be an integer"))
